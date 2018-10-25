@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+#info {
+  position: absolute;
+  top: 2%;
+  width: 100%;
+  padding: 10px;
+  text-align: center;
+  color: #ffff00
+}
+
+body {
+  overflow: hidden;
+}
+
+</style>
+</head>
+
+<body>
+  <div id="info">hw2
+</div>
+<audio id="collisionsound" style="display:none">
+<source src="https://jyunming-chen.github.io/gameHWhelpers/sounds/collision3.wav" type="audio/wav">
+</audio>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js">
+
+</script>
+<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
+
+
+<script>
+
+
+class Ball {
+	constructor (mesh, radius = 2, color) {
+
+  	this.pos = new THREE.Vector3()
+    this.vel = new THREE.Vector3()
+    this.force = new THREE.Vector3()
+	this.mass = 10;
+    this.mesh = mesh;
+    this.radius = radius;
+    this.light = new THREE.PointLight (color, 1, 50);
+    scene.add (this.light)
+    scene.add (this.mesh)   // add to scene when particle is created
+
+console.log (color)
+		this.mesh.material.color.copy ( color.clone() );
+  }
+  update (dt) {
+		this.vel.add (this.force.clone().multiplyScalar (dt))
+  	this.pos.add (this.vel.clone().multiplyScalar(dt))
+
+		this.collidingPlanes (planes)
+
+    // simple collision
+  /*
+  if (this.pos.z > 100 - this.radius) {
+    	const CR = 0.9
+    	this.pos.z = 100 - this.radius
+      this.vel.z = - CR * this.vel.z;
+    }
+  */
+		this.mesh.position.copy (this.pos)
+    this.light.position.copy (this.pos)
+    this.light.position.y += 20
+  }
+
+	collidingPlanes (planes) {
+    const EPS = 1e-3
+    const CR = 0.96
+  	for (let i = 0; i < planes.length; i++) {
+			let plane = planes[i]
+			let point = this.pos.clone().sub (plane.ptOnPl)
+      if ( point.dot(plane.normal) < EPS + this.radius) {
+      	collisionSound.play();
+				// position correction
+      	this.pos.copy (plane.ptOnPl.clone().add (point.projectOnPlane(plane.normal)) )
+        this.pos.add (plane.normal.clone().multiplyScalar(this.radius))
+      	// velocity update
+      	this.vel.sub (plane.normal.clone().multiplyScalar ((1+CR)*this.vel.dot(plane.normal)))
+      	//return;  // assume particle collides with AT MOST one plane
+      }
+  	}
+  }
+
+}
+
+class Plane {
+	constructor (localPointOnPlane, localNormal, mesh) {
+    this.localPtOnPl = localPointOnPlane.clone();
+		this.localNormal = localNormal.clone();
+    this.mesh = mesh;  // the graphics representation
+    scene.add (mesh)
+  }
+  update () {
+  	this.mesh.updateMatrixWorld() // important!
+  	this.ptOnPl = this.mesh.localToWorld (this.localPtOnPl.clone());
+    let normalMat = new THREE.Matrix3().getNormalMatrix (this.mesh.matrixWorld);
+    this.normal = this.localNormal.clone().applyMatrix3 (normalMat).normalize()
+  }
+}
+
+function collision () {
+
+	for (let i = 0; i < balls.length; i++) {
+  	for (let j = i+1; j < balls.length; j++) {
+    	ballBallIntersect (balls[i], balls[j]);
+		}
+  }
+}
+
+function ballBallIntersect (b1, b2) {
+	let centerDist = b1.pos.distanceTo (b2.pos)
+  if (centerDist < b1.radius + b2.radius) {
+  	console.log ('ball-ball hit')
+    //collisionSound.play();
+	let p1 = b1.pos;
+    let p2 = b2.pos;
+    let n = p1.clone().sub(p2).normalize();
+/*
+    let v1 = b1.vel;
+    let v2 = b2.vel;
+    let eps=0.9
+    console.log (b1.mass + ':' + b2.mass)
+    let j = v1.clone().sub(v2).projectOnVector(n).multiplyScalar (-b1.mass*(1+eps));
+    b1.vel.copy(b1.vel.clone().multiplyScalar(b1.mass).add(j).multiplyScalar(1/b1.mass));
+    b2.vel.copy(b2.vel.clone().multiplyScalar(b2.mass).sub(j).multiplyScalar(1/b2.mass))
+*/
+
+		// from wiki (elastic collision)
+    //debugger
+    //console.log ('before:'+b1.vel.x)
+    let v12 = b1.vel.clone().sub(b2.vel)
+    b1.vel.sub (n.clone().multiplyScalar (v12.dot(n)*2*b2.mass/(b1.mass+b2.mass) ))
+    b2.vel.add (n.clone().multiplyScalar (v12.dot(n)*2*b1.mass/(b1.mass+b2.mass) ))
+    //console.log ('after:'+b1.vel.x)
+		// position correction
+    let vv = b2.pos.clone().sub(b1.pos);
+    let overlap = (b2.radius+b1.radius) - vv.length();
+    vv.normalize();
+    b1.pos.add ( vv.clone().multiplyScalar  (-overlap/2))
+    b2.pos.add ( vv.clone().multiplyScalar  (overlap/2))
+  }
+}
+
+
+///////////////////////////////////////////////////////////////////////
+var camera, scene, renderer, light;
+var ball
+var planes =[]
+var balls = []
+var collisionSound, soundTrack;
+var isDimming = false, soundVal = 1.0, sign = 1.0;
+var isPaused = false;
+
+init();
+animate();
+
+function init() {
+  scene = new THREE.Scene();
+  collisionSound = document.getElementById ('collisionsound');
+
+  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 1000);
+  camera.position.y = 200;
+	camera.position.z = 300;
+
+  light = new THREE.PointLight(0xffffff);
+  light.position.set(100, 300, 200);
+  scene.add(light);
+
+  var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+  //scene.add(gridXZ);
+  var floor = new THREE.Mesh (new THREE.PlaneGeometry (200,200), new THREE.MeshPhongMaterial({color:0x888888}))
+  floor.rotation.x = -Math.PI/2
+  scene.add (floor)
+
+  renderer = new THREE.WebGLRenderer();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setClearColor(0x888888);
+
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+
+  document.body.appendChild(renderer.domElement);
+  ///////////////////////////////////////////////////////////
+  ////////// ball design
+  let disk, ball;
+  disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
+
+	ball = new Ball (disk, 10, new THREE.Color (0x00ffff))
+  ball.vel.set (15,0,15)
+  ball.pos.set (0,3,30)
+	balls.push (ball)
+
+  disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
+	ball = new Ball (disk, 10, new THREE.Color (0xff00ff))
+  ball.vel.set (-15,0,9)
+  ball.pos.set (0,3,0)
+	balls.push (ball)
+
+  disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
+	ball = new Ball (disk, 10, new THREE.Color (0x0000ff))
+  ball.vel.set (20,0,8)
+  ball.pos.set (25,3,0)
+	balls.push (ball)
+
+  disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
+	ball = new Ball (disk, 10, new THREE.Color (0xff0000))
+  ball.vel.set (-7,0,13)
+  ball.pos.set (40,3,-50)
+	balls.push (ball)
+
+  disk = new THREE.Mesh (new THREE.CylinderGeometry (10, 10, 6, 32), new THREE.MeshBasicMaterial() )
+	ball = new Ball (disk, 10, new THREE.Color (0x00ff00))
+  ball.vel.set (5,0,-3)
+  ball.pos.set (-20,3,-60)
+	balls.push (ball)
+
+	/////// wall set
+	let plane, wall
+  var wallMaterial = new THREE.MeshPhongMaterial ({color: 0xee0000,opacity:0.2,transparent:true});
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (220, 10, 10), wallMaterial )
+  scene.add (wall)
+  wall.position.z = 105
+	plane = new Plane (new THREE.Vector3(0,0,-5), new THREE.Vector3(0,0,-1), wall)
+  plane.update()
+  planes.push (plane)
+
+  wall = new THREE.Mesh ( new THREE.BoxGeometry (220, 10, 10), wallMaterial )
+  scene.add (wall)
+  wall.position.z = -105
+	plane = new Plane (new THREE.Vector3(0,0,5), new THREE.Vector3(0,0,1), wall.clone())
+  plane.update()
+  planes.push (plane)
+
+   wall = new THREE.Mesh ( new THREE.BoxGeometry (10, 10, 200), wallMaterial )
+  scene.add (wall)
+  wall.position.x = -105
+	plane = new Plane (new THREE.Vector3(5,0,0), new THREE.Vector3(1,0,0), wall.clone())
+  plane.update()
+  planes.push (plane)
+
+   wall = new THREE.Mesh ( new THREE.BoxGeometry (10, 10, 200), wallMaterial )
+  scene.add (wall)
+  wall.position.x = 105
+	plane = new Plane (new THREE.Vector3(-5,0,0), new THREE.Vector3(-1,0,0), wall.clone())
+  plane.update()
+  planes.push (plane)
+}
+
+function animate() {
+	balls.forEach (function(b) {b.update(0.1)})
+	collision();
+	//ball.update (0.1)
+  requestAnimationFrame(animate);
+  render();
+}
+
+function render() {
+  renderer.render(scene, camera);
+}
+
+</script>
+</body>
+
+</html>
