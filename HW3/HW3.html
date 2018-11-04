@@ -4,55 +4,56 @@
 
 <head>
 <style>
-	body {
-	  background-color: #fff;
-	  color: #111;
-	  margin: 0px;
-	  overflow: hidden;
-	  font-family: Monospace;
-	  font-size: 20px;
-	}
-	
-	#info {
-	  position: absolute;
-	  top: 0px;
-	  width: 100%;
-	  padding: 5px;
-	  text-align: center;
-	  color: #ffff00
-	}
-	
-	a {
-	  color: #00ffff
-	}
-	
-	strong {
-	  color: red
-	}
-	
-	#container {
-	  z-index: 0;
-	  left: 0px;
-	  top: 0px;
-	  overflow: hidden;
-	  position: absolute;
-	  width: 100%;
-	  height: 100%;
-	}
+body {
+	background-color: #fff;
+	color: #111;
+	margin: 0px;
+	overflow: hidden;
+	font-family: Monospace;
+	font-size: 20px;
+}
+
+#info {
+	position: absolute;
+	top: 0px;
+	width: 100%;
+	padding: 5px;
+	text-align: center;
+	color: #ffff00
+}
+
+a {
+	color: #00ffff
+}
+
+strong {
+	color: red
+}
+
+#container {
+	z-index: 0;
+	left: 0px;
+	top: 0px;
+	overflow: hidden;
+	position: absolute;
+	width: 100%;
+	height: 100%;
+}
 </style>
 </head>
 
 <body>
-<div id="info">
-  HW3
-  <br>
-</div>
-<audio id="music" autoplay loop style="display:none">
-<source src="https://audionautix.com/Music/Pyramids.mp3" type='audio/mp3'>
-</audio>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
-<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+	<div id="info">
+	  HW3
+	  <br>
+	</div>
+	<audio id="music" autoplay loop style="display:none">
+	<source src="https://audionautix.com/Music/Pyramids.mp3" type='audio/mp3'>
+	</audio>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+	<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+	<script src="https://jyunming-chen.github.io/tutsplus/js/KeyboardState.js"></script>
 
 <script>
 
@@ -82,7 +83,7 @@ var Default = {
         lrZ: 0,
         llZ: 0
 };
-var p1 = { 
+var p1 = {
 				sZ: -0.702861304754967,
         sX: 0.02,
         sY: -0.7722262685117736,
@@ -140,14 +141,14 @@ function buildBody () {
   let torso = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
   torso.position.set(0, 100, 0);
   body.add(torso);
-  
+
   ////////////////head
   let head = new THREE.Object3D();
   boxGeometry = new THREE.BoxGeometry(30, 40, 20);
   head = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
   head.position.set(0, 160, 0)
   body.add(head)
-  
+
 
 	///////////////////////right arm
   let arm;
@@ -166,7 +167,7 @@ function buildBody () {
   arm.position.set(-5, -30, 0);
   lowerArm.position.set(0, -40, 0);
   upperArm.add(lowerArm);
-  
+
   //////////////////////////left arm
   let larm;
   lupperArm = new THREE.Object3D();
@@ -184,7 +185,7 @@ function buildBody () {
   larm.position.set(5, -30, 0);
   llowerArm.position.set(0, -40, 0);
   lupperArm.add(llowerArm);
-  
+
   /////////////////////////////right leg
   let leg;
   upperLeg = new THREE.Object3D();
@@ -194,7 +195,7 @@ function buildBody () {
   leg.position.set(-5, -20, 0);
   body.add(upperLeg);
   upperLeg.position.set(-10, 45, 0);
-  
+
   //////////////////////////left leg
   let lleg;
   lupperLeg = new THREE.Object3D();
@@ -234,13 +235,13 @@ function init() {
   let controls = new THREE.OrbitControls(camera, renderer.domElement);
  	let gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
   scene.add(gridXZ);
-  
+
   window.addEventListener('resize', onWindowResize, false);
 	/////////////////////////////////////////////////////////////////////////////
   body = buildBody ();
   scene.add (body)
   //body.position.set(0, 0, -35);
-  
+
   ///////////////////////
   var gui = new dat.GUI( {load: loadJSON()}  );
   gui.remember (gcontrols)
@@ -252,7 +253,9 @@ function init() {
   gui.add (gcontrols, 'posX', -20, 20);
   gui.add (gcontrols, 'lrZ', -1.2, 0.2);
   gui.add (gcontrols, 'llZ', -1.2, 0.2);
-  
+
+  music.play()
+
 }
 
 function loadJSON(){
@@ -319,12 +322,12 @@ function keyframe(t) {
   for (var i = 1; i < keys.length; i++) {
     if (keys[i][0] > s) break;
   }
-    
+
   // take i-1
   var ii = i - 1;
   var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
   console.log (a)
-  
+
   intKey = [
   	keys[ii][1].sZ * (1 - a) + keys[ii + 1][1].sZ * a,
     keys[ii][1].sX * (1 - a) + keys[ii + 1][1].sX * a,
@@ -341,7 +344,6 @@ function animate() {
 	keyframe (clock.getElapsedTime())
   requestAnimationFrame(animate);
   render();
-	music.play();
 }
 
 function onWindowResize() {
@@ -359,19 +361,19 @@ function render() {
   upperArm.rotation.y = intKey[1]//theta2; //-Math.PI/3;//theta2;
   upperArm.rotation.x = intKey[2]//theta2; //-Math.PI/3;//theta2;
   upperArm.rotation.order = 'ZXY';
-  
+
   lowerArm.rotation.x = intKey[3]//theta3; //-Math.PI/4;//theta3;
   upperLeg.rotation.z = intKey[6]
-  
+
   ////////////////////left
 	lupperArm.rotation.z = -intKey[0]//theta1; //-Math.PI/6;//theta1;
   lupperArm.rotation.y = -intKey[1]//theta2; //-Math.PI/3;//theta2;
   lupperArm.rotation.x = intKey[2]//theta2; //-Math.PI/3;//theta2;
   lupperArm.rotation.order = 'ZXY';
-  
+
   llowerArm.rotation.x = intKey[3]//theta3; //-Math.PI/4;//theta3;
   lupperLeg.rotation.z = -intKey[7]
-	
+
   body.position.y = intKey[4];
   body.position.x = intKey[5];
 //////////////////////////////////////////////////
@@ -380,22 +382,22 @@ function render() {
   upperArm.rotation.y = gcontrols.sY//theta2; //-Math.PI/3;//theta2;
   upperArm.rotation.x = gcontrols.sX//theta2; //-Math.PI/3;//theta2;
   upperArm.rotation.order = 'ZXY';
-  
+
   lowerArm.rotation.x = gcontrols.eX//theta3; //-Math.PI/4;//theta3;
   upperLeg.rotation.z = gcontrols.lrZ
-  
+
   ////////////////////left
 	lupperArm.rotation.z = -gcontrols.sZ//theta1; //-Math.PI/6;//theta1;
   lupperArm.rotation.y = -gcontrols.sY//theta2; //-Math.PI/3;//theta2;
   lupperArm.rotation.x = gcontrols.sX//theta2; //-Math.PI/3;//theta2;
   lupperArm.rotation.order = 'ZXY';
-  
+
   llowerArm.rotation.x = gcontrols.eX//theta3; //-Math.PI/4;//theta3;
   lupperLeg.rotation.z = -gcontrols.llZ
-	
+
   body.position.y = gcontrols.posY;
   body.position.x = gcontrols.posX;*/
-	
+
   renderer.render(scene, camera)
 }
 </script>
