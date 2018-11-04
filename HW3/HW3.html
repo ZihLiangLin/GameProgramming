@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+<style>
+	body {
+	  background-color: #fff;
+	  color: #111;
+	  margin: 0px;
+	  overflow: hidden;
+	  font-family: Monospace;
+	  font-size: 20px;
+	}
+	
+	#info {
+	  position: absolute;
+	  top: 0px;
+	  width: 100%;
+	  padding: 5px;
+	  text-align: center;
+	  color: #ffff00
+	}
+	
+	a {
+	  color: #00ffff
+	}
+	
+	strong {
+	  color: red
+	}
+	
+	#container {
+	  z-index: 0;
+	  left: 0px;
+	  top: 0px;
+	  overflow: hidden;
+	  position: absolute;
+	  width: 100%;
+	  height: 100%;
+	}
+</style>
+</head>
+
+<body>
+<div id="info">
+  HW3
+  <br>
+</div>
+<audio id="music" autoplay loop style="display:none">
+<source src="https://audionautix.com/Music/Pyramids.mp3" type='audio/mp3'>
+</audio>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/84/three.min.js"></script>
+<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/dat-gui/0.5.1/dat.gui.min.js"></script>
+
+<script>
+
+var scene, renderer, camera;
+var body, lowerArm, upperArm, llowerArm, lupperArm;
+var upperLeg, lupperLeg;
+var sZ, sX, sY, eX, posX, posY, lrZ, llZ;
+var theta1 = 0.1, theta2 = 0.1;
+var gcontrols = {
+	sZ: 0.01,  // s for shoulder
+	sX: 0.02,
+	sY: 0.01,
+	eX: 0.03,  // e for elbow
+	posY: 0.01,
+  posX: 0.02,
+  lrZ: 0.00,   // l for leg;
+  llZ: 0.00    //lr -> right leg; ll -> left leg
+};
+
+var Default = {
+				sZ: 0.01,
+        sX: 0.02,
+        sY: 0.01,
+        eX: 0.03,
+        posY: 0.01,
+        posX: 0.02,
+        lrZ: 0,
+        llZ: 0
+};
+var p1 = { 
+				sZ: -0.702861304754967,
+        sX: 0.02,
+        sY: -0.7722262685117736,
+        eX: -0.7889917802517936,
+        posY: 0.01,
+        posX: -20,
+        lrZ: -0.42614712308812774,
+        llZ: -0.12267540665209942
+};
+var p2 = {
+				sZ: -0.703,
+        sX: 0.02,
+        sY: -0.7722262685117736,
+        eX: -0.7889917802517936,
+        posY: 0.01,
+        posX: 20,
+        lrZ: 0,
+        llZ: -0.6689244962369504
+};
+var p3 = {
+				sZ: -2.2635729892831127,
+        sX: 0.4069781153539367,
+        sY: -1.1884160510526125,
+        eX: -0.6264176464467783,
+        posY: 20,
+        posX: 0,
+        lrZ: -1.2,
+        llZ: -1.2
+};
+var keys = [
+  [0, Default],
+  [0.125, p1],
+  [0.25, Default],
+  [0.375, p2],
+  [0.5, Default],
+  [0.75, p3],
+  [1, Default]
+];
+
+var T = 4;
+var clock = new THREE.Clock();
+var ts = clock.getElapsedTime()
+var intKey =[];
+
+///////////////////////
+init();
+animate();
+
+function buildBody () {
+
+	var body = new THREE.Object3D();
+
+	let boxGeometry;
+	boxGeometry = new THREE.BoxGeometry(50, 100, 30);
+  let torso = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  torso.position.set(0, 100, 0);
+  body.add(torso);
+  
+  ////////////////head
+  let head = new THREE.Object3D();
+  boxGeometry = new THREE.BoxGeometry(30, 40, 20);
+  head = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  head.position.set(0, 160, 0)
+  body.add(head)
+  
+
+	///////////////////////right arm
+  let arm;
+  upperArm = new THREE.Object3D();
+  boxGeometry = new THREE.BoxGeometry(10, 40, 10);
+  arm = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  upperArm.add(arm);
+  arm.position.set(-5, -20, 0);
+  body.add(upperArm);
+  upperArm.position.set(-25, 150, 0);
+
+  lowerArm = new THREE.Object3D();
+  boxGeometry = new THREE.BoxGeometry(10, 60, 10);
+  arm = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  lowerArm.add(arm);
+  arm.position.set(-5, -30, 0);
+  lowerArm.position.set(0, -40, 0);
+  upperArm.add(lowerArm);
+  
+  //////////////////////////left arm
+  let larm;
+  lupperArm = new THREE.Object3D();
+  boxGeometry = new THREE.BoxGeometry(10, 40, 10);
+  larm = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  lupperArm.add(larm);
+  larm.position.set(5, -20, 0);
+  body.add(lupperArm);
+  lupperArm.position.set(25, 150, 0);
+
+  llowerArm = new THREE.Object3D();
+  boxGeometry = new THREE.BoxGeometry(10, 60, 10);
+  larm = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  llowerArm.add(larm);
+  larm.position.set(5, -30, 0);
+  llowerArm.position.set(0, -40, 0);
+  lupperArm.add(llowerArm);
+  
+  /////////////////////////////right leg
+  let leg;
+  upperLeg = new THREE.Object3D();
+  boxGeometry = new THREE.BoxGeometry(10, 50, 10);
+  leg = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  upperLeg.add(leg);
+  leg.position.set(-5, -20, 0);
+  body.add(upperLeg);
+  upperLeg.position.set(-10, 45, 0);
+  
+  //////////////////////////left leg
+  let lleg;
+  lupperLeg = new THREE.Object3D();
+  boxGeometry = new THREE.BoxGeometry(10, 50, 10);
+  lleg = new THREE.Mesh(boxGeometry, new THREE.MeshNormalMaterial());
+  lupperLeg.add(lleg);
+  lleg.position.set(5, -20, 0);
+  body.add(lupperLeg);
+  lupperLeg.position.set(10, 45, 0);
+
+
+
+	return body;
+}
+
+function init() {
+
+  var width = window.innerWidth;
+  var height = window.innerHeight;
+
+  renderer = new THREE.WebGLRenderer({
+    antialias: true
+  });
+  renderer.setSize(width, height);
+  renderer.setClearColor(0x888888);
+
+  document.body.appendChild(renderer.domElement);
+
+  scene = new THREE.Scene();
+
+  camera = new THREE.PerspectiveCamera(40, width / height, 0.1, 10000);
+  camera.position.y = 160;
+  camera.position.z = 400;
+  camera.lookAt(new THREE.Vector3(0, 0, 0));
+  scene.add(camera);
+
+  let controls = new THREE.OrbitControls(camera, renderer.domElement);
+ 	let gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
+  scene.add(gridXZ);
+  
+  window.addEventListener('resize', onWindowResize, false);
+	/////////////////////////////////////////////////////////////////////////////
+  body = buildBody ();
+  scene.add (body)
+  //body.position.set(0, 0, -35);
+  
+  ///////////////////////
+  var gui = new dat.GUI( {load: loadJSON()}  );
+  gui.remember (gcontrols)
+  gui.add (gcontrols, 'sZ', -3.2, 0);
+  gui.add (gcontrols, 'sX', -3.2, 3.2);
+  gui.add (gcontrols, 'sY', -3.2, 3.2);
+  gui.add (gcontrols, 'eX', -3, 0);
+  gui.add (gcontrols, 'posY', 0, 20);
+  gui.add (gcontrols, 'posX', -20, 20);
+  gui.add (gcontrols, 'lrZ', -1.2, 0.2);
+  gui.add (gcontrols, 'llZ', -1.2, 0.2);
+  
+  music.play();
+}
+
+function loadJSON(){
+  return{
+  "preset": "Default",
+  "remembered": {
+    "Default": {
+      "0": {
+        "sZ": 0.01,
+        "sX": 0.02,
+        "sY": 0.01,
+        "eX": 0.03,
+        "posY": 0.01,
+        "posX": 0.02,
+        "lrZ": 0,
+        "llZ": 0
+      }
+    },
+    "p1": {
+      "0": {
+        "sZ": -0.702861304754967,
+        "sX": 0.02,
+        "sY": -0.7722262685117736,
+        "eX": -0.7889917802517936,
+        "posY": 0.01,
+        "posX": -20,
+        "lrZ": -0.42614712308812774,
+        "llZ": -0.12267540665209942
+      }
+    },
+    "p2": {
+      "0": {
+        "sZ": -0.703,
+        "sX": 0.02,
+        "sY": -0.7722262685117736,
+        "eX": -0.7889917802517936,
+        "posY": 0.01,
+        "posX": 20,
+        "lrZ": 0,
+        "llZ": -0.6689244962369504
+      }
+    },
+    "p3": {
+      "0": {
+        "sZ": -2.2635729892831127,
+        "sX": 0.4069781153539367,
+        "sY": -1.1884160510526125,
+        "eX": -0.6264176464467783,
+        "posY": 20,
+        "posX": 0,
+        "lrZ": -1.2,
+        "llZ": -1.2
+      }
+    }
+  },
+  "closed": false,
+  "folders": {}
+}
+}
+
+function keyframe(t) {
+  var s = ((t - ts) % T) / T;
+
+  for (var i = 1; i < keys.length; i++) {
+    if (keys[i][0] > s) break;
+  }
+    
+  // take i-1
+  var ii = i - 1;
+  var a = (s - keys[ii][0]) / (keys[ii + 1][0] - keys[ii][0]);
+  console.log (a)
+  
+  intKey = [
+  	keys[ii][1].sZ * (1 - a) + keys[ii + 1][1].sZ * a,
+    keys[ii][1].sX * (1 - a) + keys[ii + 1][1].sX * a,
+    keys[ii][1].sY * (1 - a) + keys[ii + 1][1].sY * a,
+    keys[ii][1].eX * (1 - a) + keys[ii + 1][1].eX * a,
+    keys[ii][1].posY * (1 - a) + keys[ii + 1][1].posY * a,
+    keys[ii][1].posX * (1 - a) + keys[ii + 1][1].posX * a,
+    keys[ii][1].lrZ * (1 - a) + keys[ii + 1][1].lrZ * a,
+    keys[ii][1].llZ * (1 - a) + keys[ii + 1][1].llZ * a
+  ];
+}
+
+function animate() {
+	keyframe (clock.getElapsedTime())
+  requestAnimationFrame(animate);
+  render();
+}
+
+function onWindowResize() {
+  var width = window.innerWidth,
+    height = window.innerHeight;
+  camera.aspect = width / height;
+  camera.updateProjectionMatrix();
+  renderer.setSize(width, height);
+}
+
+
+function render() {
+	////////////////////right
+	upperArm.rotation.z = intKey[0]//theta1; //-Math.PI/6;//theta1;
+  upperArm.rotation.y = intKey[1]//theta2; //-Math.PI/3;//theta2;
+  upperArm.rotation.x = intKey[2]//theta2; //-Math.PI/3;//theta2;
+  upperArm.rotation.order = 'ZXY';
+  
+  lowerArm.rotation.x = intKey[3]//theta3; //-Math.PI/4;//theta3;
+  upperLeg.rotation.z = intKey[6]
+  
+  ////////////////////left
+	lupperArm.rotation.z = -intKey[0]//theta1; //-Math.PI/6;//theta1;
+  lupperArm.rotation.y = -intKey[1]//theta2; //-Math.PI/3;//theta2;
+  lupperArm.rotation.x = intKey[2]//theta2; //-Math.PI/3;//theta2;
+  lupperArm.rotation.order = 'ZXY';
+  
+  llowerArm.rotation.x = intKey[3]//theta3; //-Math.PI/4;//theta3;
+  lupperLeg.rotation.z = -intKey[7]
+	
+  body.position.y = intKey[4];
+  body.position.x = intKey[5];
+//////////////////////////////////////////////////
+  	////////////////////right
+	/*upperArm.rotation.z = gcontrols.sZ//theta1; //-Math.PI/6;//theta1;
+  upperArm.rotation.y = gcontrols.sY//theta2; //-Math.PI/3;//theta2;
+  upperArm.rotation.x = gcontrols.sX//theta2; //-Math.PI/3;//theta2;
+  upperArm.rotation.order = 'ZXY';
+  
+  lowerArm.rotation.x = gcontrols.eX//theta3; //-Math.PI/4;//theta3;
+  upperLeg.rotation.z = gcontrols.lrZ
+  
+  ////////////////////left
+	lupperArm.rotation.z = -gcontrols.sZ//theta1; //-Math.PI/6;//theta1;
+  lupperArm.rotation.y = -gcontrols.sY//theta2; //-Math.PI/3;//theta2;
+  lupperArm.rotation.x = gcontrols.sX//theta2; //-Math.PI/3;//theta2;
+  lupperArm.rotation.order = 'ZXY';
+  
+  llowerArm.rotation.x = gcontrols.eX//theta3; //-Math.PI/4;//theta3;
+  lupperLeg.rotation.z = -gcontrols.llZ
+	
+  body.position.y = gcontrols.posY;
+  body.position.x = gcontrols.posX;*/
+	
+  renderer.render(scene, camera)
+}
+</script>
+</body>
+
+</html>
