@@ -303,6 +303,12 @@
     function posy(){
       console.log(poWrap.md2.root.position.y)
       if(poWrap.md2.root.position.y == ycopy){
+        scene.add(platform)
+        scene.remove (platform2)
+        scene.remove (platform3)
+        scene.remove (platform4)
+        scene.remove (platform5)
+        scene.remove (treasure)
         for(let i = 0; i < flag.length; i++){
           flag[i] = 0;
         }
@@ -311,26 +317,38 @@
       if(poWrap.md2.root.position.x > -450 && poWrap.md2.root.position.x < 300 && poWrap.md2.root.position.z <= 650 && poWrap.md2.root.position.z > -50){//&& poWrap.md2.root.position.z < 850 + 2000){
         if(poWrap.md2.root.position.x > 130 && poWrap.md2.root.position.x < 170 && poWrap.md2.root.position.z < 220 && poWrap.md2.root.position.z >= 180 && poWrap.md2.root.position.y >= ycopy + 200 && flag[4] == 1 && jmpflag == 1){
           scene.remove (treasure)
+          //scene.remove (platform5)
+          //scene.add (platform)
+          //for(let i = 0; i <= 25; i++){
+          //  poWrap.md2.root.position.y -= 10;
+          //}
+          //for(let i = 0; i < flag.length; i++){
+          //  flag[i] = 0;
+          //}
         }
         if(poWrap.md2.root.position.x > 0 && poWrap.md2.root.position.x < 300 && poWrap.md2.root.position.z < 450 && poWrap.md2.root.position.z >= -50 && poWrap.md2.root.position.y >= ycopy + 200 && poWrap.md2.root.position.y < ycopy + 250 && flag[3] == 1){
           poWrap.md2.root.position.y += 10;
           flag[4] = 1;
           scene.add (treasure)
+          scene.remove (platform4)
         }
         if(poWrap.md2.root.position.x > -250 && poWrap.md2.root.position.x < 250 && poWrap.md2.root.position.z < 300 && poWrap.md2.root.position.z >= 0 && poWrap.md2.root.position.y >= ycopy + 150 && poWrap.md2.root.position.y < ycopy + 200 && flag[2] == 1){
           poWrap.md2.root.position.y += 10;
           flag[3] = 1;
           scene.add (platform5)
+          scene.remove (platform3)
         }
         if(poWrap.md2.root.position.x > -450 && poWrap.md2.root.position.x < -150 && poWrap.md2.root.position.z < 500 && poWrap.md2.root.position.z >= 0 && poWrap.md2.root.position.y >= ycopy + 100 && poWrap.md2.root.position.y < ycopy + 150 && flag[1] == 1){
           poWrap.md2.root.position.y += 10;
           flag[2] = 1;
           scene.add (platform4)
+          scene.remove (platform2)
         }
         if(poWrap.md2.root.position.x > -450 && poWrap.md2.root.position.x < 50 && poWrap.md2.root.position.z < 650 && poWrap.md2.root.position.z >= 350 && poWrap.md2.root.position.y >= ycopy + 50 && poWrap.md2.root.position.y < ycopy + 100 && flag[0] == 1){
           poWrap.md2.root.position.y += 10;
           flag[1] = 1;
           scene.add (platform3)
+          scene.remove (platform)
         }
         if(poWrap.md2.root.position.x > -250 && poWrap.md2.root.position.x < 250 && poWrap.md2.root.position.z < 500 && poWrap.md2.root.position.z >= 200 && poWrap.md2.root.position.y >= ycopy && poWrap.md2.root.position.y < ycopy + 50){
           poWrap.md2.root.position.y += 10;
