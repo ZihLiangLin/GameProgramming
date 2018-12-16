@@ -35,6 +35,8 @@
     w:Front a:Left s:Back d:Right
     <br>
     space:jump ctrl:crouch
+    <br>
+    Please get the treasure, find the goal, and you can...
 	</div>
   <audio id="music" autoplay loop style="display:none">
 	<source src="Seven_Twenty.mp3" type='audio/mp3'>
@@ -92,9 +94,10 @@
   	var cameraControls;
   	var clock = new THREE.Clock();
     var flag = [0,0,0,0,0,0,0,0,0,0]
-    var platform, platform2, platform3, platform4, platform5
+    var platform, platform2, platform3, platform4, platform5, goal
     var treasure;
     var jmpflag = 0;
+    var tx, tz, tflag = 0;
 
   	init();
     animate();
@@ -195,6 +198,8 @@
       treasure.position.x = 150
       treasure.position.z = 200;
       treasure.position.y = 435;
+      tx = treasure.position.x;
+      tz = treasure.position.z;
 
   		// CHARACTER: po
   		let configPo = {
@@ -301,7 +306,7 @@
   	}
 
     function posy(){
-      console.log(poWrap.md2.root.position.y)
+      //console.log(tx)
       if(poWrap.md2.root.position.y == ycopy){
         scene.add(platform)
         scene.remove (platform2)
@@ -309,14 +314,24 @@
         scene.remove (platform4)
         scene.remove (platform5)
         scene.remove (treasure)
+        scene.remove (goal)
+        treasure.position.x = tx
+        treasure.position.z = tz
         for(let i = 0; i < flag.length; i++){
           flag[i] = 0;
         }
       }
 
       if(poWrap.md2.root.position.x > -450 && poWrap.md2.root.position.x < 300 && poWrap.md2.root.position.z <= 650 && poWrap.md2.root.position.z > -50){//&& poWrap.md2.root.position.z < 850 + 2000){
-        if(poWrap.md2.root.position.x > 130 && poWrap.md2.root.position.x < 170 && poWrap.md2.root.position.z < 220 && poWrap.md2.root.position.z >= 180 && poWrap.md2.root.position.y >= ycopy + 200 && flag[4] == 1 && jmpflag == 1){
+        if(poWrap.md2.root.position.x > tx-20 && poWrap.md2.root.position.x < tx+20 && poWrap.md2.root.position.z < tz+20 && poWrap.md2.root.position.z >= tz-20 && poWrap.md2.root.position.y >= ycopy + 200 && flag[4] == 1 && jmpflag == 1){
           scene.remove (treasure)
+          tx = Math.floor((Math.random() * 300) + 1);
+          tz = Math.floor((Math.random() * 500) - 49);
+          goal = new THREE.Mesh(new THREE.BoxGeometry(20,2,20), new THREE.MeshPhongMaterial ({color:0xff0000,transparent:true, opacity:1}))
+          scene.add(goal)
+          goal.position.x = 150
+          goal.position.y = 100
+          goal.position.z = -60
           //scene.remove (platform5)
           //scene.add (platform)
           //for(let i = 0; i <= 25; i++){
